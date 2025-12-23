@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --color-accent: #808080;
+  --color-accent-hover: #555555;
+  --color-text: #fff;
+  --color-bg: #F7F7F7;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Raleway', sans-serif;
+}
+
+button {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--color-accent-hover);
+}

@@ -1,0 +1,46 @@
+.header {
+    display: flex;
+    flex-direction: column;
+    background-color: transparent;
+}
+
+.logoWrapper {
+    display: flex;
+    align-items: center;
+    padding: 1rem 2rem 0.5rem;
+}
+
+.logoLink {
+    display: flex;
+    align-items: center;
+}
+
+/* навигация */
+
+.nav {
+    background-color: #f7f7f7;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.navList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    list-style: none;
+    margin: 0;
+}
+
+.navList li a {
+    text-decoration: none;
+    color: #12c6dc;
+    font-weight: 800;
+    transition: color 0.2s ease;
+}
+
+.navList li a:hover {
+    color: var(--color-accent-hover);
+}
