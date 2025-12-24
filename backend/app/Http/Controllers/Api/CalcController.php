@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceListItem;
 use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CalcController extends Controller
 {
@@ -16,7 +17,6 @@ class CalcController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.price_id' => ['required', 'integer', 'exists:price_list,id'],
             'items.*.qty' => ['required', 'integer', 'min:1', 'max:100'],
-            'extra_percent' => ['nullable', 'numeric', 'min:0', 'max:200'],
         ]);
 
         $service = Service::query()->findOrFail($data['service_id']);
@@ -71,4 +71,58 @@ class CalcController extends Controller
             'breakdown' => $breakdown,
         ]);
     }
+
+    public function calcUniversal(Request $request)
+    {
+        $data = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.price_id' => ['required', 'integer'],
+            'items.*.qty' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $items = collect($data['items']);
+        $priceIds = $items->pluck('price_id')->unique()->values();
+
+        // ВАЖНО: если тут снова 500 — значит проблема в модели PriceListItem ($table не та)
+        $rows = PriceListItem::query()
+            ->whereIn('id', $priceIds)
+            ->get(['id', 'description', 'price'])
+            ->keyBy('id');
+
+        // Проверяем, что все id нашлись
+        $missing = $priceIds->diff($rows->keys())->values();
+        if ($missing->isNotEmpty()) {
+            return response()->json([
+                'message' => 'Some price_id not found',
+                'missing' => $missing,
+            ], 422);
+        }
+
+        $breakdown = [];
+        $total = 0.0;
+
+        foreach ($items as $it) {
+            $row = $rows->get((int) $it['price_id']);
+            $qty = (int) $it['qty'];
+
+            $unit = (float) $row->price;
+            $line = $unit * $qty;
+
+            $total += $line;
+
+            $breakdown[] = [
+                'price_id' => (int) $row->id,
+                'description' => (string) $row->description,
+                'unit_price' => round($unit, 2),
+                'qty' => $qty,
+                'line_total' => round($line, 2),
+            ];
+        }
+
+        return response()->json([
+            'total' => round($total, 2),
+            'breakdown' => $breakdown,
+        ]);
+    }
+
 }

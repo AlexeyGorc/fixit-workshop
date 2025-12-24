@@ -22,11 +22,12 @@ export default function Header() {
             <nav className={styles.nav}>
                 <ul className={styles.navList}>
                     <li><Link href="/">Главная</Link></li>
-                    <li><Link href="/profile">Личный кабинет</Link></li>
+                    <li><Link href="/projects">Примеры работ</Link></li>
                     <li><Link href="/services">Услуги</Link></li>
                     <li><Link href="/pricing">Цены и калькуляторы</Link></li>
                     <li><Link href="/about">О нас</Link></li>
                     <li><Link href="/contacts">Контакты</Link></li>
+                    <li><Link href="/profile">Личный кабинет</Link></li>
                 </ul>
             </nav>
         </header>

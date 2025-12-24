@@ -8,23 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Order extends Model
 {
     protected $fillable = [
-        'user_id',
-        'service_id',
-        'order_date',
-        'order_status',
+        'user_id','service_id','name','email','phone',
+        'details','items_json','total','order_date','order_status'
     ];
 
     protected $casts = [
+        'items_json' => 'array',
+        'total' => 'decimal:2',
         'order_date' => 'date',
     ];
 
-    public function service(): BelongsTo
-    {
-        return $this->belongsTo(Service::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    public function service() { return $this->belongsTo(Service::class); }
+    public function user() { return $this->belongsTo(User::class); }
 }
+
