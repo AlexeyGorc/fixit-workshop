@@ -56,7 +56,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // по желанию: чистим старые токены, чтобы не плодить
         $user->tokens()->delete();
 
         $token = $user->createToken('api')->plainTextToken;

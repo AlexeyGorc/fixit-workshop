@@ -31,7 +31,6 @@ class ProfileController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
-            // email можно разрешить менять, но аккуратно:
             'email' => [
                 'required',
                 'email',
@@ -66,7 +65,6 @@ class ProfileController extends Controller
             ->where(function ($q) use ($u) {
                 $q->where('user_id', $u->id);
 
-                // гостевые заказы, оформленные на тот же email (и/или телефон)
                 $q->orWhere(function ($qq) use ($u) {
                     $qq->whereNull('user_id')
                         ->where('email', $u->email);

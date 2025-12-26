@@ -31,7 +31,6 @@ class ServiceForm extends Form
     #[Validate('nullable|integer|min:0')]
     public ?int $max_days = null;
 
-    // compare_specs как JSON (в UI можно оставить textarea)
     #[Validate('nullable|string')]
     public ?string $compare_specs_json = null;
 

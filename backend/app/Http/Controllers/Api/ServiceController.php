@@ -12,7 +12,6 @@ class ServiceController extends Controller
     {
         $q = Service::query();
 
-        // filters
         $q->when($request->filled('category'), fn($qq) => $qq->where('category', $request->string('category')));
         $q->when($request->filled('subcategory'), fn($qq) => $qq->where('subcategory', $request->string('subcategory')));
 

@@ -43,7 +43,7 @@ export default function ProjectsClient({
         const next = new URLSearchParams(sp.toString());
         if (value) next.set(key, value);
         else next.delete(key);
-        next.delete("page"); // при смене фильтра сбрасываем страницу
+        next.delete("page");
         router.push(`/projects?${next.toString()}`);
     }
 
@@ -98,7 +98,6 @@ export default function ProjectsClient({
                 {payload.data.map((p) => (
                     <article key={p.id} className="bg-white text-black rounded shadow overflow-hidden">
                         {p.image_url ? (
-                            // если у тебя Next Image — можно заменить на <Image/>
                             <img src={p.image_url} alt={p.name} className="w-full h-48 object-cover" />
                         ) : (
                             <div className="w-full h-48 bg-zinc-200" />

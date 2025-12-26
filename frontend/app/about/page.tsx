@@ -4,7 +4,6 @@ export default function AboutPage() {
     return (
         <section id="about" className="px-4 py-8 space-y-8">
             <h1 className="text-3xl font-bold text-center">О нас</h1>
-            {/* История компании */}
             <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">История компании</h2>
                 <p className="text-gray-800 leading-relaxed">
@@ -13,7 +12,6 @@ export default function AboutPage() {
                 </p>
             </div>
 
-            {/* Команда */}
             <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">Наша команда</h2>
                 <ul className="grid sm:grid-cols-2 gap-4 text-gray-800">
@@ -59,7 +57,6 @@ export default function AboutPage() {
                 </ul>
             </div>
 
-            {/* Партнёры */}
             <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">Наши партнёры</h2>
                 <p className="text-gray-800 leading-relaxed">
@@ -85,7 +82,6 @@ export default function AboutPage() {
                 </div>
             </div>
 
-            {/* Пресса о нас */}
             <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">Пресса о нас</h2>
                 <ul className="list-disc list-inside text-gray-800 space-y-1">

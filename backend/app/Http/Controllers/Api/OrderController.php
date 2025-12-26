@@ -32,7 +32,6 @@ class OrderController extends Controller
 
         $user = $request->user('sanctum') ?? auth()->user();
 
-        // Если нет юзера — это гость: name+email должны быть
         if (!$user) {
             $request->validate([
                 'name' => ['required','string','min:2','max:255'],
@@ -40,7 +39,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // total: если не пришёл, но есть service_id — берём из services.price
         $total = $data['total'] ?? null;
         if ($total === null && !empty($data['service_id'])) {
             $service = Service::query()->find($data['service_id']);
@@ -52,7 +50,6 @@ class OrderController extends Controller
             'user_id' => $user?->id,
             'service_id' => $data['service_id'] ?? null,
 
-            // если авторизован — берём из профиля, иначе из формы
             'name' => $user?->name ?? $data['name'],
             'email' => $user?->email ?? $data['email'],
             'phone' => $user?->phone ?? ($data['phone'] ?? null),

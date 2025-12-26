@@ -19,7 +19,7 @@ class Index extends Component
     public string $search = '';
 
     #[Url]
-    public string $service = ''; // service_id как строка для URL
+    public string $service = '';
 
     public bool $modalOpen = false;
     public ?int $deleteId = null;

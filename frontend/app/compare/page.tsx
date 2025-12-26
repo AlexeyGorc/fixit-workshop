@@ -17,7 +17,6 @@ export default async function ComparePage() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!baseUrl) throw new Error("NEXT_PUBLIC_API_URL is not set");
 
-    // берём побольше, чтобы на странице было из чего выбирать
     const res = await fetch(`${baseUrl}/services?per_page=100&sort=newest`, {
         cache: "no-store",
     });

@@ -47,7 +47,6 @@
         {{ $items->links() }}
     </div>
 
-    {{-- Modal create/edit --}}
     <flux:modal wire:model="modalOpen">
         <flux:heading>{{ $form->id ? 'Редактировать позицию' : 'Новая позиция' }}</flux:heading>
 
@@ -69,7 +68,6 @@
         </div>
     </flux:modal>
 
-    {{-- Delete confirm --}}
     <flux:modal :open="$deleteId !== null" @close="$wire.set('deleteId', null)">
         <flux:heading>Удалить позицию прайса?</flux:heading>
         <div class="mt-4 flex justify-end gap-2">

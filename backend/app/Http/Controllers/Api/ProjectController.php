@@ -12,7 +12,6 @@ class ProjectController extends Controller
     {
         $q = Project::query()->with('service:id,name,category,subcategory');
 
-        // фильтры
         $q->when($request->filled('service_id'), fn($qq) =>
         $qq->where('service_id', (int) $request->input('service_id'))
         );
@@ -26,13 +25,11 @@ class ProjectController extends Controller
             ->orWhere('description', 'like', '%' . $request->input('q') . '%')
         );
 
-        // limit для главной (без пагинации)
         if ($request->filled('limit')) {
             $limit = max(1, min((int)$request->input('limit'), 24));
             return $q->orderByDesc('created_at')->limit($limit)->get();
         }
 
-        // пагинация для страницы /projects
         $perPage = max(1, min((int)$request->input('per_page', 12), 48));
         return $q->orderByDesc('created_at')->paginate($perPage);
     }

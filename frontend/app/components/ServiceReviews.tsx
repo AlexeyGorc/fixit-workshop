@@ -106,7 +106,6 @@ export default function ServiceReviews({ serviceId, onCreated }: Props) {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                // Laravel обычно кладёт в message, а валидацию — в errors
                 const msg =
                     data?.message ??
                     (data?.errors ? JSON.stringify(data.errors) : null) ??

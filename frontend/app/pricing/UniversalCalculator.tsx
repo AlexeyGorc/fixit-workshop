@@ -163,7 +163,6 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
 
     return (
         <section className="space-y-4">
-            {/* поиск + прайс */}
             <div className="bg-white text-black rounded shadow p-4 space-y-3">
                 <div className="flex flex-col gap-2">
                     <input
@@ -229,7 +228,6 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                 </div>
             </div>
 
-            {/* корзина */}
             <div className="bg-white text-black rounded shadow p-4 space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Выбранные позиции</h3>
@@ -280,14 +278,12 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                     </div>
                 )}
 
-                {/* результат */}
                 {result ? (
                     <div className="pt-3 border-t space-y-2">
                         <div className="text-lg">
                             Итого: <b>{result.total} ₽</b>
                         </div>
 
-                        {/* breakdown (можно убрать, если не нужен) */}
                         {result.breakdown?.length ? (
                             <div className="text-sm text-gray-700 space-y-1">
                                 {result.breakdown.map((b) => (

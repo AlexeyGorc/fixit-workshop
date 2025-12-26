@@ -53,7 +53,6 @@
         {{ $projects->links() }}
     </div>
 
-    {{-- Modal create/edit --}}
     <flux:modal wire:model="modalOpen">
         <flux:heading>{{ $form->id ? 'Редактировать проект' : 'Новый проект' }}</flux:heading>
 
@@ -76,7 +75,6 @@
         </div>
     </flux:modal>
 
-    {{-- Delete confirm --}}
     <flux:modal :open="$deleteId !== null" @close="$wire.set('deleteId', null)">
         <flux:heading>Удалить проект?</flux:heading>
         <div class="mt-4 flex justify-end gap-2">

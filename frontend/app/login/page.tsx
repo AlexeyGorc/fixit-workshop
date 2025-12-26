@@ -13,11 +13,9 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState("");
 
-    // login form
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    // register form
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
 

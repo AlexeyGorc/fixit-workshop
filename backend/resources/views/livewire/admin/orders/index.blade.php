@@ -1,11 +1,9 @@
 <div class="p-6 space-y-6">
-    {{-- Header --}}
     <div class="space-y-1">
         <flux:heading>Заказы</flux:heading>
         <flux:subheading>Все заявки клиентов.</flux:subheading>
     </div>
 
-    {{-- Filters --}}
     <div class="flex flex-wrap items-center gap-3">
         <flux:select wire:model.live="status" class="max-w-xs">
             <option value="">Все статусы</option>
@@ -34,14 +32,12 @@
         <flux:spacer />
     </div>
 
-    {{-- Flash --}}
     @if (session('status'))
         <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
             {{ session('status') }}
         </div>
     @endif
 
-    {{-- Table --}}
     <div class="overflow-x-auto rounded-xl border border-zinc-200/60 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table class="min-w-full text-sm">
             <thead class="bg-zinc-50 dark:bg-zinc-900/40">
@@ -106,7 +102,6 @@
         </table>
     </div>
 
-    {{-- Pagination --}}
     <div>
         {{ $orders->links() }}
     </div>

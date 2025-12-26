@@ -53,7 +53,7 @@ export default function CompareClient({ services }: { services: Service[] }) {
     function add(id: number) {
         setSelectedIds((prev) => {
             if (prev.includes(id)) return prev;
-            if (prev.length >= 4) return prev; // ограничение 4 услуги
+            if (prev.length >= 4) return prev;
             return [...prev, id];
         });
     }

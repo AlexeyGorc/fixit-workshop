@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getToken } from "@/app/lib/authToken";
+import { apiLogout } from "@/app/lib/authApi";
 
 type ProfileUser = {
     id: number;
@@ -65,8 +67,8 @@ function fmtDuration(min: number | null, max: number | null) {
 
 export default function ProfilePage() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const router = useRouter();
 
-    // ✅ важно для hydration: до mount токена "нет"
     const [mounted, setMounted] = useState(false);
     const [token, setToken] = useState<string | null>(null);
 
@@ -81,7 +83,6 @@ export default function ProfilePage() {
     const [form, setForm] = useState({ name: "", email: "", phone: "" });
     const [saveErr, setSaveErr] = useState("");
 
-    // favorites
     const [favorites, setFavorites] = useState<FavoriteService[]>([]);
     const [favLoading, setFavLoading] = useState(false);
     const [favErr, setFavErr] = useState("");
@@ -201,16 +202,30 @@ export default function ProfilePage() {
         }
     }
 
-    // ✅ loadAll только после mount (когда токен уже считан)
     useEffect(() => {
         if (!mounted) return;
         loadAll();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mounted]);
 
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+    }
+
+    async function logout() {
+        try {
+            await apiLogout();
+        } catch {
+        } finally {
+            setToken(null);
+            setUser(null);
+            setOrders([]);
+            setFavorites([]);
+            setErr("");
+            setSaveErr("");
+            setFavErr("");
+            router.push("/login");
+        }
     }
 
     async function saveProfile() {
@@ -250,7 +265,18 @@ export default function ProfilePage() {
 
     return (
         <div className="p-6 space-y-12">
-            <h1 className="text-3xl font-bold text-center">Личный кабинет</h1>
+            <div className="flex items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold text-center flex-1">Личный кабинет</h1>
+                <button
+                    type="button"
+                    onClick={logout}
+                    disabled={!mounted}
+                    className="px-4 py-2 rounded bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50"
+                    title="Выйти"
+                >
+                    Выйти
+                </button>
+            </div>
 
             {loading ? <div className="text-center text-zinc-300">Загрузка…</div> : null}
 
@@ -260,7 +286,6 @@ export default function ProfilePage() {
                 </div>
             ) : null}
 
-            {/* Профиль */}
             <section id="profile" className="bg-white p-6 rounded shadow-md">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">Профиль</h2>
 
@@ -290,9 +315,7 @@ export default function ProfilePage() {
                                 </tr>
 
                                 <tr className="border-b">
-                                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                                        Email
-                                    </td>
+                                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Email</td>
                                     <td className="px-4 py-3 text-gray-800">
                                         {editing ? (
                                             <input
@@ -308,9 +331,7 @@ export default function ProfilePage() {
                                 </tr>
 
                                 <tr className="border-b">
-                                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">
-                                        Телефон
-                                    </td>
+                                    <td className="px-4 py-3 font-medium text-gray-600 bg-gray-50">Телефон</td>
                                     <td className="px-4 py-3 text-gray-800">
                                         {editing ? (
                                             <input
@@ -380,7 +401,6 @@ export default function ProfilePage() {
                 )}
             </section>
 
-            {/* История заказов */}
             <section id="orders" className="mt-8">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">История заказов</h2>
 
@@ -393,7 +413,8 @@ export default function ProfilePage() {
                             const serviceName = o.service?.name ?? "—";
                             return (
                                 <li key={o.id} className="border p-4 rounded bg-white shadow text-gray-900">
-                                    <span className="font-medium">#{o.id}</span> — {serviceName} — {fmtDate(o.order_date)}
+                                    <span className="font-medium">#{o.id}</span> — {serviceName} —{" "}
+                                    {fmtDate(o.order_date)}
                                     <span className={`ml-2 text-sm ${st.cls}`}>({st.label})</span>
 
                                     <div className="mt-1 text-sm text-gray-700">
@@ -406,7 +427,6 @@ export default function ProfilePage() {
                 )}
             </section>
 
-            {/* Избранное (позже) */}
             <section id="favorites" className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="text-xl font-semibold">Избранное</h2>
@@ -422,7 +442,6 @@ export default function ProfilePage() {
 
                 {favErr ? <div className="text-sm text-red-600">{favErr}</div> : null}
 
-                {/* ✅ ВАЖНО: до mounted показываем одинаковый текст (SSR == первый CSR) */}
                 {!mounted ? (
                     <div className="bg-white p-4 rounded shadow text-gray-700">Загрузка…</div>
                 ) : !token ? (
@@ -483,7 +502,6 @@ export default function ProfilePage() {
                 )}
             </section>
 
-            {/* Уведомления (позже) */}
             <section id="notifications">
                 <h2 className="text-xl font-semibold mb-2">Уведомления</h2>
                 <ul className="list-disc list-inside space-y-1 text-gray-800">
@@ -492,7 +510,6 @@ export default function ProfilePage() {
                 </ul>
             </section>
 
-            {/* Рекомендации (позже) */}
             <section id="recommendations">
                 <h2 className="text-xl font-semibold mb-2">Рекомендации</h2>
                 <ul className="grid sm:grid-cols-2 gap-4">

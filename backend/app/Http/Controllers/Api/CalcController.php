@@ -83,13 +83,11 @@ class CalcController extends Controller
         $items = collect($data['items']);
         $priceIds = $items->pluck('price_id')->unique()->values();
 
-        // ВАЖНО: если тут снова 500 — значит проблема в модели PriceListItem ($table не та)
         $rows = PriceListItem::query()
             ->whereIn('id', $priceIds)
             ->get(['id', 'description', 'price'])
             ->keyBy('id');
 
-        // Проверяем, что все id нашлись
         $missing = $priceIds->diff($rows->keys())->values();
         if ($missing->isNotEmpty()) {
             return response()->json([

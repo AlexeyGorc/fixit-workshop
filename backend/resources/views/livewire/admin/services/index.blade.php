@@ -58,7 +58,6 @@
         {{ $services->links() }}
     </div>
 
-    {{-- Modal create/edit --}}
     <flux:modal wire:model="modalOpen">
         <flux:heading>{{ $form->id ? 'Редактировать услугу' : 'Новая услуга' }}</flux:heading>
 
@@ -86,7 +85,6 @@
         </div>
     </flux:modal>
 
-    {{-- Delete confirm (упрощенно) --}}
     <flux:modal :open="$deleteId !== null" @close="$wire.set('deleteId', null)">
         <flux:heading>Удалить услугу?</flux:heading>
         <div class="mt-4 flex justify-end gap-2">

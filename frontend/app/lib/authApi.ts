@@ -44,7 +44,6 @@ export async function apiLogin(payload: { email: string; password: string }) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-        // Laravel ValidationException может вернуть errors
         const msg =
             data?.message ??
             (data?.errors ? JSON.stringify(data.errors) : null) ??

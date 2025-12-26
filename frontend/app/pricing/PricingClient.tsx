@@ -108,7 +108,6 @@ export default function PricingClient({ items }: { items: PriceItem[] }) {
                 />
             </section>
 
-            {/* ПРАЙС: ТАБЛИЦЫ */}
             <section className="space-y-10">
                 {sections.map((sec) => (
                     <div key={sec.title} className="space-y-4">
@@ -152,7 +151,6 @@ export default function PricingClient({ items }: { items: PriceItem[] }) {
                 ))}
             </section>
 
-            {/* ССЫЛКА НА COMPARE + КАЛЬКУЛЯТОР */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="text-2xl font-semibold">Калькулятор стоимости</h2>

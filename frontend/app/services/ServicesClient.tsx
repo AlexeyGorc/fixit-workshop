@@ -30,7 +30,6 @@ export default function ServicesClient({ services }: { services: Service[] }) {
 
     const [selectedCategory, setSelectedCategory] = useState("Все");
 
-    /* ===== HYDRATION SAFE AUTH ===== */
     const [token, setToken] = useState<string | null>(null);
     const [isHydrated, setIsHydrated] = useState(false);
 
@@ -41,7 +40,6 @@ export default function ServicesClient({ services }: { services: Service[] }) {
 
     const isAuthed = isHydrated && !!token;
 
-    /* ===== FAVORITES ===== */
     const [favIds, setFavIds] = useState<Set<number>>(new Set());
     const [favErr, setFavErr] = useState("");
 
@@ -102,7 +100,6 @@ export default function ServicesClient({ services }: { services: Service[] }) {
         }
     }
 
-    /* ===== FILTER / GROUP ===== */
     const filtered = useMemo(() => {
         if (selectedCategory === "Все") return services;
         return services.filter(
@@ -125,7 +122,6 @@ export default function ServicesClient({ services }: { services: Service[] }) {
         return `${s.min_days ?? "—"}–${s.max_days ?? "—"} дн.`;
     }
 
-    /* ===== ORDERS ===== */
     async function createOrderAuthed(serviceId: number) {
         if (!baseUrl || !token) return;
 
@@ -149,7 +145,6 @@ export default function ServicesClient({ services }: { services: Service[] }) {
         }
     }
 
-    /* ===== RENDER ===== */
     return (
         <main className="flex flex-col gap-10 py-12 px-4">
             <section className="text-center">
