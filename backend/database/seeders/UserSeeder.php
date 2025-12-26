@@ -17,17 +17,6 @@ class UserSeeder extends Seeder
     {
         $userRole = Role::where('slug', 'user')->firstOrFail();
 
-        $testUser = User::updateOrCreate(
-            ['email' => 'user@example.local'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('user'),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $testUser->roles()->syncWithoutDetaching([$userRole->id]);
-
         $count = 10;
 
         User::factory()

@@ -33,21 +33,6 @@ type CalcResp = {
     }>;
 };
 
-type OrderReq = {
-    service_id?: number | null;
-    name: string;
-    email: string;
-    phone?: string | null;
-    details?: string | null;
-    items: Array<{ price_id: number; qty: number }>;
-    total: number;
-};
-
-type OrderResp = {
-    id: number;
-    order_status: string;
-};
-
 export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -57,19 +42,6 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string>("");
 
-    // order modal state
-    const [orderOpen, setOrderOpen] = useState(false);
-    const [orderLoading, setOrderLoading] = useState(false);
-    const [orderErr, setOrderErr] = useState<string>("");
-    const [orderSuccess, setOrderSuccess] = useState<OrderResp | null>(null);
-
-    const [orderForm, setOrderForm] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        details: "",
-    });
-
     const itemsById = useMemo(() => {
         const map = new Map<number, PriceItem>();
         for (const it of items) map.set(it.id, it);
@@ -78,7 +50,7 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return items.slice(0, 20);
+        if (!q) return items.slice(0, 40);
 
         return items
             .filter((it) => {
@@ -90,7 +62,7 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                     sub.includes(q)
                 );
             })
-            .slice(0, 30);
+            .slice(0, 60);
     }, [items, query]);
 
     const cartRows = useMemo(() => {
@@ -113,18 +85,6 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
         };
     }, [cartRows]);
 
-    // ВАЖНО: определяем service_id из корзины
-    const derivedServiceId: number | null = useMemo(() => {
-        if (!cartRows.length) return null;
-
-        const ids = new Set<number>();
-        for (const row of cartRows) ids.add(row.item.service_id);
-
-        // Если все позиции относятся к одной услуге — отправляем её id.
-        // Если разные услуги — оставляем null (для учебного проекта так ок).
-        return ids.size === 1 ? Array.from(ids)[0] : null;
-    }, [cartRows]);
-
     function add(priceId: number) {
         setCart((prev) => ({ ...prev, [priceId]: (prev[priceId] ?? 0) + 1 }));
         setResult(null);
@@ -142,6 +102,13 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
         });
         setResult(null);
         setErr("");
+    }
+
+    function reset() {
+        setCart({});
+        setResult(null);
+        setErr("");
+        setQuery("");
     }
 
     async function calc() {
@@ -162,7 +129,10 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
         try {
             const res = await fetch(`${baseUrl}/calc/universal`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
                 body: JSON.stringify(payload),
             });
 
@@ -191,115 +161,61 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
         }
     }
 
-    function openOrder() {
-        if (!result) {
-            setErr("Сначала нажми «Рассчитать»");
-            return;
-        }
-        setOrderErr("");
-        setOrderSuccess(null);
-        setOrderOpen(true);
-    }
-
-    function closeOrder() {
-        setOrderOpen(false);
-    }
-
-    function onOrderChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const { name, value } = e.target;
-        setOrderForm((prev) => ({ ...prev, [name]: value }));
-    }
-
-    async function submitOrder() {
-        if (!baseUrl) {
-            setOrderErr("NEXT_PUBLIC_API_URL is not set");
-            return;
-        }
-        if (!result) {
-            setOrderErr("Нет результата расчёта");
-            return;
-        }
-        if (!orderForm.name.trim()) {
-            setOrderErr("Введите имя");
-            return;
-        }
-        if (!orderForm.email.trim()) {
-            setOrderErr("Введите email");
-            return;
-        }
-
-        setOrderLoading(true);
-        setOrderErr("");
-        setOrderSuccess(null);
-
-        const orderPayload: OrderReq = {
-            service_id: derivedServiceId, // ✅ ДОБАВИЛИ
-            name: orderForm.name.trim(),
-            email: orderForm.email.trim(),
-            phone: orderForm.phone.trim() || null,
-            details: orderForm.details.trim() || null,
-            items: payload.items,
-            total: result.total,
-        };
-
-        try {
-            const res = await fetch(`${baseUrl}/orders`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(orderPayload),
-            });
-
-            if (!res.ok) {
-                const contentType = res.headers.get("content-type") ?? "";
-                if (contentType.includes("application/json")) {
-                    const data = await res.json().catch(() => null);
-                    throw new Error(
-                        data?.message ??
-                        (data?.errors
-                            ? JSON.stringify(data.errors)
-                            : `HTTP ${res.status}`)
-                    );
-                } else {
-                    const text = await res.text();
-                    throw new Error(text.slice(0, 300) || `HTTP ${res.status}`);
-                }
-            }
-
-            const data: OrderResp = await res.json();
-            setOrderSuccess(data);
-
-            // очищаем корзину и результат, чтобы пользователь понимал: заявка оформлена
-            setCart({});
-            setResult(null);
-        } catch (e: any) {
-            setOrderErr(e?.message ?? "Order error");
-        } finally {
-            setOrderLoading(false);
-        }
-    }
-
     return (
         <section className="space-y-4">
+            {/* поиск + прайс */}
             <div className="bg-white text-black rounded shadow p-4 space-y-3">
-                <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Найти позицию прайса..."
-                    className="w-full rounded px-3 py-2 border"
-                />
+                <div className="flex flex-col gap-2">
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Найти позицию прайса..."
+                        className="w-full rounded px-3 py-2 border"
+                    />
 
-                <div className="max-h-64 overflow-auto border rounded">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={reset}
+                            type="button"
+                            className="px-3 py-2 rounded bg-zinc-100"
+                        >
+                            Сбросить
+                        </button>
+
+                        <button
+                            onClick={calc}
+                            disabled={loading}
+                            className="ml-auto px-4 py-2 rounded bg-black text-white disabled:opacity-50"
+                            type="button"
+                        >
+                            {loading ? "Считаю..." : "Рассчитать"}
+                        </button>
+                    </div>
+                </div>
+
+                {err ? <div className="text-sm text-red-600">{err}</div> : null}
+
+                <div className="max-h-72 overflow-auto border rounded">
                     {filtered.map((it) => (
-                        <div key={it.id} className="flex items-center gap-3 px-3 py-2 border-b">
-                            <div className="flex-1">
-                                <div className="font-medium">{it.description}</div>
-                                <div className="text-xs text-gray-500">
+                        <div
+                            key={it.id}
+                            className="flex items-center gap-3 px-3 py-2 border-b"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">
+                                    {it.description}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate">
                                     {it.service?.name}
-                                    {it.service?.subcategory ? ` • ${it.service.subcategory}` : ""}
+                                    {it.service?.subcategory
+                                        ? ` • ${it.service.subcategory}`
+                                        : ""}
                                 </div>
                             </div>
 
-                            <div className="font-semibold whitespace-nowrap">{it.price} ₽</div>
+                            <div className="font-semibold whitespace-nowrap">
+                                {it.price} ₽
+                            </div>
 
                             <button
                                 className="px-3 py-1 rounded bg-black text-white"
@@ -311,33 +227,33 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                         </div>
                     ))}
                 </div>
-
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={calc}
-                        disabled={loading}
-                        className="ml-auto px-4 py-2 rounded bg-black text-white disabled:opacity-50"
-                        type="button"
-                    >
-                        {loading ? "Считаю..." : "Рассчитать"}
-                    </button>
-                </div>
-
-                {err ? <div className="text-sm text-red-600">{err}</div> : null}
             </div>
 
+            {/* корзина */}
             <div className="bg-white text-black rounded shadow p-4 space-y-3">
-                <h3 className="text-lg font-semibold">Выбранные позиции</h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Выбранные позиции</h3>
+                    <div className="text-sm text-gray-600">
+                        {cartRows.length ? `Позиций: ${cartRows.length}` : "Пусто"}
+                    </div>
+                </div>
 
                 {cartRows.length === 0 ? (
                     <div className="text-sm text-gray-600">Пока пусто</div>
                 ) : (
                     <div className="space-y-2">
                         {cartRows.map(({ item, qty }) => (
-                            <div key={item.id} className="flex items-center gap-3">
-                                <div className="flex-1">
-                                    <div className="font-medium">{item.description}</div>
-                                    <div className="text-xs text-gray-500">{item.service?.name}</div>
+                            <div
+                                key={item.id}
+                                className="flex items-center gap-3"
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-medium truncate">
+                                        {item.description}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                        {item.service?.name}
+                                    </div>
                                 </div>
 
                                 <input
@@ -345,7 +261,9 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                                     min={1}
                                     max={100}
                                     value={qty}
-                                    onChange={(e) => setQty(item.id, Number(e.target.value))}
+                                    onChange={(e) =>
+                                        setQty(item.id, Number(e.target.value))
+                                    }
                                     className="w-20 rounded px-2 py-1 border"
                                 />
 
@@ -353,6 +271,7 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                                     className="px-3 py-1 rounded bg-red-600 text-white"
                                     onClick={() => setQty(item.id, 0)}
                                     type="button"
+                                    title="Удалить"
                                 >
                                     x
                                 </button>
@@ -361,129 +280,34 @@ export default function UniversalCalculator({ items }: { items: PriceItem[] }) {
                     </div>
                 )}
 
+                {/* результат */}
                 {result ? (
                     <div className="pt-3 border-t space-y-2">
                         <div className="text-lg">
                             Итого: <b>{result.total} ₽</b>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={openOrder}
-                            className="px-4 py-2 rounded bg-black text-white"
-                        >
-                            Оформить заявку
-                        </button>
-
-                        {/* необязательное пояснение для отладки */}
-                        <div className="text-xs text-gray-500">
-                            service_id: <b>{derivedServiceId ?? "null"}</b>
-                        </div>
+                        {/* breakdown (можно убрать, если не нужен) */}
+                        {result.breakdown?.length ? (
+                            <div className="text-sm text-gray-700 space-y-1">
+                                {result.breakdown.map((b) => (
+                                    <div
+                                        key={b.price_id}
+                                        className="flex justify-between gap-4"
+                                    >
+                                        <div className="min-w-0 truncate">
+                                            {b.description} × {b.qty}
+                                        </div>
+                                        <div className="whitespace-nowrap font-medium">
+                                            {b.line_total} ₽
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : null}
                     </div>
                 ) : null}
             </div>
-
-            {/* МОДАЛКА заказа (простая) */}
-            {orderOpen ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60" onClick={closeOrder} />
-                    <div className="relative w-full max-w-lg bg-white text-black rounded shadow p-5">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <h4 className="text-xl font-semibold">Оформить заявку</h4>
-                                <div className="text-sm text-gray-600 mt-1">
-                                    Сумма: <b>{result?.total} ₽</b>
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={closeOrder}
-                                className="px-2 py-1 rounded bg-zinc-100"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        {orderSuccess ? (
-                            <div className="mt-4 space-y-2">
-                                <div className="text-green-700 font-semibold">Заявка отправлена!</div>
-                                <div className="text-sm">
-                                    Номер заявки: <b>#{orderSuccess.id}</b>
-                                </div>
-                                <div className="text-sm">
-                                    Статус: <b>{orderSuccess.order_status}</b>
-                                </div>
-
-                                <div className="mt-4 flex justify-end">
-                                    <button
-                                        type="button"
-                                        onClick={closeOrder}
-                                        className="px-4 py-2 rounded bg-black text-white"
-                                    >
-                                        Закрыть
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="mt-4 grid gap-3">
-                                    <input
-                                        name="name"
-                                        value={orderForm.name}
-                                        onChange={onOrderChange}
-                                        placeholder="Имя *"
-                                        className="w-full rounded px-3 py-2 border"
-                                    />
-                                    <input
-                                        name="email"
-                                        value={orderForm.email}
-                                        onChange={onOrderChange}
-                                        placeholder="Email *"
-                                        className="w-full rounded px-3 py-2 border"
-                                    />
-                                    <input
-                                        name="phone"
-                                        value={orderForm.phone}
-                                        onChange={onOrderChange}
-                                        placeholder="Телефон (необязательно)"
-                                        className="w-full rounded px-3 py-2 border"
-                                    />
-                                    <textarea
-                                        name="details"
-                                        value={orderForm.details}
-                                        onChange={onOrderChange}
-                                        placeholder="Комментарий к заявке (необязательно)"
-                                        className="w-full rounded px-3 py-2 border min-h-[100px]"
-                                    />
-                                </div>
-
-                                {orderErr ? (
-                                    <div className="text-sm text-red-600 mt-3">{orderErr}</div>
-                                ) : null}
-
-                                <div className="mt-5 flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={closeOrder}
-                                        className="px-4 py-2 rounded bg-zinc-100"
-                                    >
-                                        Отмена
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={submitOrder}
-                                        disabled={orderLoading}
-                                        className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
-                                    >
-                                        {orderLoading ? "Отправляю..." : "Отправить"}
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            ) : null}
         </section>
     );
 }

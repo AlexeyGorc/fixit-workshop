@@ -4,7 +4,7 @@ export default async function ProjectsSection() {
         throw new Error("NEXT_PUBLIC_API_URL is not set");
     }
 
-    const res = await fetch(`${baseUrl}/projects?limit=6`, {
+    const res = await fetch(`${baseUrl}/projects?limit=3`, {
         cache: "no-store",
     });
 

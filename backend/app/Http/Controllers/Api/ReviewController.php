@@ -27,7 +27,11 @@ class ReviewController extends Controller
     // POST /api/reviews (auth required)
     public function store(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $data = $request->validate([
             'service_id' => ['required', 'integer', 'exists:services,id'],
@@ -35,19 +39,29 @@ class ReviewController extends Controller
             'content' => ['required', 'string', 'min:5', 'max:2000'],
         ]);
 
-        // один отзыв на услугу (соответствует unique в БД)
-        $review = Review::updateOrCreate(
-            ['user_id' => $userId, 'service_id' => $data['service_id']],
-            ['rating' => $data['rating'], 'content' => $data['content']]
-        );
+        $review = Review::create([
+            'user_id' => $user->id,
+            'service_id' => $data['service_id'],
+            'rating' => $data['rating'],
+            'content' => $data['content'],
+        ]);
 
-        return response()->json($review->load(['user:id,name', 'service:id,name']), 201);
+        return response()->json(
+            $review->load(['user:id,name', 'service:id,name']),
+            201
+        );
     }
 
     // DELETE /api/reviews/{review} (только владелец)
     public function destroy(Request $request, Review $review)
     {
-        abort_unless($request->user()->id === $review->user_id, 403);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        abort_unless($user->id === $review->user_id, 403);
 
         $review->delete();
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -11,31 +12,55 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required','string','min:2','max:255'],
-            'email' => ['required','email','max:255'],
+            // гостевые данные (если нет авторизации)
+            'name' => ['nullable','string','min:2','max:255'],
+            'email' => ['nullable','email','max:255'],
             'phone' => ['nullable','string','max:50'],
             'details' => ['nullable','string'],
 
-            // либо заказ от услуги:
+            // заказ от услуги:
             'service_id' => ['nullable','integer','exists:services,id'],
 
-            // либо заказ из калькулятора:
+            // заказ из калькулятора:
             'items' => ['nullable','array'],
             'items.*.price_id' => ['required_with:items','integer'],
             'items.*.qty' => ['required_with:items','integer','min:1','max:100'],
 
-            'total' => ['required','numeric','min:0'],
+            // total теперь можно не передавать для service_id
+            'total' => ['nullable','numeric','min:0'],
         ]);
 
+        $user = $request->user('sanctum') ?? auth()->user();
+
+        // Если нет юзера — это гость: name+email должны быть
+        if (!$user) {
+            $request->validate([
+                'name' => ['required','string','min:2','max:255'],
+                'email' => ['required','email','max:255'],
+            ]);
+        }
+
+        // total: если не пришёл, но есть service_id — берём из services.price
+        $total = $data['total'] ?? null;
+        if ($total === null && !empty($data['service_id'])) {
+            $service = Service::query()->find($data['service_id']);
+            $total = (float)($service?->price ?? 0);
+        }
+        $total = $total ?? 0;
+
         $order = Order::create([
-            'user_id' => auth()->id(),
+            'user_id' => $user?->id,
             'service_id' => $data['service_id'] ?? null,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
+
+            // если авторизован — берём из профиля, иначе из формы
+            'name' => $user?->name ?? $data['name'],
+            'email' => $user?->email ?? $data['email'],
+            'phone' => $user?->phone ?? ($data['phone'] ?? null),
+
             'details' => $data['details'] ?? null,
             'items_json' => $data['items'] ?? null,
-            'total' => $data['total'],
+            'total' => $total,
+
             'order_date' => now()->toDateString(),
             'order_status' => 'pending',
         ]);
